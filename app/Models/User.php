@@ -45,4 +45,23 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+
+
+
+    // public function getProfileDirect()
+    // {
+    //     if(!empty($this->profile_picture) && file_exists('upload/profile/'.$this->profile_picture))
+    //     {
+    //         return url('upload/profile/'.$this->profile_picture);
+    //     }
+    //     else
+    //     {
+    //         return url('upload/profile/user.jpg');
+    //     }
+
+    // }
+
+
+    
 }

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Brand extends Model
+class Category extends Model
 {
     use HasFactory;
 
@@ -15,13 +15,13 @@ class Brand extends Model
         return $this->hasMany(Product::class);
     }
 
-    
 
-    public function getBrandImage()
+
+    public function getCategoryImage()
     {
-        if(!empty($this->image) && file_exists('uploads/brands/'.$this->image))
+        if(!empty($this->image) && file_exists('uploads/categories/'.$this->image))
         {
-            return url('uploads/brands/'.$this->image);
+            return url('uploads/categories/'.$this->image);
         }
         else
         {
@@ -31,8 +31,5 @@ class Brand extends Model
     }
 
 
-    
-
-    
 
 }
