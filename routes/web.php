@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ShopController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\AuthAdmin;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,9 @@ use Illuminate\Support\Facades\Route;
 Auth::routes();
 
 Route::get('/', [HomeController::class, 'index'])->name('home.index');
+
+Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+Route::get('/shop/{product_slug}', [ShopController::class, 'productDetails'])->name('shop.product.details');
 
 Route::middleware(['auth'])->group(function(){
     Route::get('/account-dashboard', [UserController::class, 'index'])->name('user.index');
@@ -49,11 +53,14 @@ Route::middleware(['auth', AuthAdmin::class])->group(function(){
 
     //PRODUCTS
     Route::get('/admin/products', [AdminController::class, 'products'])->name('admin.products');
-    Route::get('/admin/products/add', [AdminController::class, 'addProduct'])->name('admin.product.add');
-    Route::post('/admin/products/add', [AdminController::class, 'storeProduct'])->name('admin.product.store');
-    // Route::get('/admin/category/edit/{id}', [AdminController::class, 'categoryEdit'])->name('admin.category.edit');
-    // Route::put('/admin/category/update', [AdminController::class, 'categoryUpdate'])->name('admin.category.update');
-    // Route::delete('/admin/category/delete/{id}', [AdminController::class, 'categoryDelete'])->name('admin.category.delete');
+    Route::get('/admin/product/add', [AdminController::class, 'addProduct'])->name('admin.product.add');
+    Route::post('/admin/product/store', [AdminController::class, 'storeProduct'])->name('admin.product.store');
+    Route::get('/admin/product/edit/{id}', [AdminController::class, 'productEdit'])->name('admin.product.edit');
+    Route::put('/admin/product/update', [AdminController::class, 'productUpdate'])->name('admin.product.update');
+    Route::delete('/admin/product/delete/{id}', [AdminController::class, 'productDelete'])->name('admin.product.delete');
+
+
+    
 
 
 

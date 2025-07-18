@@ -30,7 +30,7 @@
                 </ul>
             </div>
             <!-- form-add-product -->
-            <form action="" class="tf-section-2 form-add-product" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('admin.product.store') }}" class="tf-section-2 form-add-product" method="POST" enctype="multipart/form-data">
                 @csrf
                 
                 <div class="wg-box">
@@ -160,8 +160,8 @@
                         @enderror
 
                         <fieldset class="name">
-                            <div class="body-title mb-10">Sale Price <span class="tf-color-1">*</span></div>
-                            <input class="mb-10" type="text" placeholder="Enter sale price" name="sale_price" tabindex="0" value="{{ old('sale_price') }}" aria-required="true" required="">
+                            <div class="body-title mb-10">Sale Price <span class="tf-color-1"></span></div>
+                            <input class="mb-10" type="text" placeholder="Enter sale price" name="sale_price" tabindex="0" value="{{ old('sale_price') }}" aria-required="true">
                         </fieldset>
                         @error('sale_price')
                             <span class="alert alert-danger text-center">{{ $message }}</span>

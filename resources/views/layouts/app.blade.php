@@ -272,7 +272,7 @@
   
         <div class="logo">
           <a href="{{ route('home.index') }}">
-            <img src="{{ asset('assets/images/logo.png') }}" alt="Uomo" class="logo__image d-block" />
+            <img src="{{ asset('assets/images/logo.png') }}" style="width: 100px;" alt="Uomo" class="logo__image d-block" />
           </a>
         </div>
   
@@ -313,7 +313,7 @@
                 <a href="{{ route('home.index') }}" class="navigation__link">Home</a>
               </li>
               <li class="navigation__item">
-                <a href="shop.html" class="navigation__link">Shop</a>
+                <a href="{{ route('shop.index') }}" class="navigation__link">Shop</a>
               </li>
               <li class="navigation__item">
                 <a href="cart.html" class="navigation__link">Cart</a>
@@ -392,7 +392,7 @@
         <div class="header-desk header-desk_type_1">
           <div class="logo">
             <a href="{{ route('home.index') }}">
-              <img src="{{ asset('assets/images/logo.png') }}" alt="Uomo" class="logo__image d-block" />
+              <img src="{{ asset('assets/images/logo.png') }}" style="width: 100px;" alt="Uomo" class="logo__image d-block" />
             </a>
           </div>
   
@@ -402,7 +402,7 @@
                 <a href="{{ route('home.index') }}" class="navigation__link">Home</a>
               </li>
               <li class="navigation__item">
-                <a href="shop.html" class="navigation__link">Shop</a>
+                <a href="{{ route('shop.index') }}" class="navigation__link">Shop</a>
               </li>
               <li class="navigation__item">
                 <a href="cart.html" class="navigation__link">Cart</a>
@@ -514,7 +514,7 @@
           <div class="footer-column footer-store-info col-12 mb-4 mb-lg-0">
             <div class="logo">
               <a href="{{ route('home.index') }}">
-                <img src="{{ asset('assets/images/logo.png') }}" alt="SurfsideMedia" class="logo__image d-block" />
+                <img src="{{ asset('assets/images/logo.png') }}" style="width: 100px;" alt="SurfsideMedia" class="logo__image d-block" />
               </a>
             </div>
             <p class="footer-address">123 Beach Avenue, Surfside City, CA 00000</p>
