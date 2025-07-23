@@ -27,6 +27,9 @@ Route::put('/cart/decrease-quantity/{rowId}', [CartController::class, 'decreaseC
 Route::delete('/cart/remove/{rowId}', [CartController::class, 'removeItem'])->name('cart.remove.item');
 Route::delete('/cart/clear', [CartController::class, 'emptyCart'])->name('cart.empty');
 
+Route::post('/cart/apply-coupon', [CartController::class, 'applyCouponCode'])->name('cart.coupon.apply');
+Route::delete('/cart/remove-coupon', [CartController::class, 'removeCouponCode'])->name('cart.coupon.remove');
+
 
 Route::post('/wishlist/add', [WishlistController::class, 'addToWishlist'])->name('wishlist.add');
 Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
@@ -34,6 +37,10 @@ Route::delete('/wishlist/item/remove/{rowId}', [WishlistController::class, 'remo
 Route::delete('/wishlist/clear', [WishlistController::class, 'emptyWishlist'])->name('wishlist.items.clear');
 Route::post('/wishlist/move-to-cart/{rowId}', [WishlistController::class, 'moveToCart'])->name('wishlist.move.to.cart');
 
+
+Route::get('/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+Route::post('/place-an-order', [CartController::class, 'placeAnOrder'])->name('cart.place.an.order');
+Route::get('/order-confirmation', [CartController::class, 'orderConfirmation'])->name('cart.order.confirmation');
 
 
 
