@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 
+
 Auth::routes();
 
 Route::get('/', [HomeController::class, 'index'])->name('home.index');
@@ -55,6 +56,9 @@ Route::get('/order-confirmation', [CartController::class, 'orderConfirmation'])-
 
 Route::middleware(['auth'])->group(function(){
     Route::get('/account-dashboard', [UserController::class, 'index'])->name('user.index');
+    Route::get('/account-orders', [UserController::class, 'orders'])->name('user.orders');
+    Route::get('/account-order/{order_id}/details', [UserController::class, 'orderDetails'])->name('user.order.details');
+    Route::put('/account-order/cancel-order', [UserController::class, 'cancelOrder'])->name('user.order.cancel');
 
 });
 
@@ -105,6 +109,12 @@ Route::middleware(['auth', AuthAdmin::class])->group(function(){
     Route::get('/admin/coupons/{id}/edit', [AdminController::class, 'couponEdit'])->name('admin.coupons.edit');
     Route::put('/admin/coupons/update', [AdminController::class, 'couponUpdate'])->name('admin.coupons.update');
     Route::delete('/admin/coupon/{id}/delete', [AdminController::class, 'couponDelete'])->name('admin.coupon.delete');
+
+
+    //ORDERS
+    Route::get('/admin/orders', [AdminController::class, 'orders'])->name('admin.orders');
+    Route::get('/admin/order/{order_id}/details', [AdminController::class, 'orderDetails'])->name('admin.order.details');
+    Route::put('/admin/order/update-status', [AdminController::class, 'updateOrderStatus'])->name('admin.order.status.update');
 
     
 

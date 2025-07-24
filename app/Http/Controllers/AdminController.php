@@ -7,6 +7,9 @@ use App\Models\Category;
 use App\Models\Product;
 use Carbon\Carbon;
 use App\Models\Coupon;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
@@ -611,6 +614,54 @@ class AdminController extends Controller
         $coupon = Coupon::find($id);
         $coupon->delete();
         return redirect()->route('admin.coupons')->with('status', 'Coupon has been deleted successfully!');
+    }
+
+
+    public function orders()
+    {
+       $orders = Order::orderBy('created_at', 'DESC')->paginate(12);
+       return view('admin.orders', compact('orders'));
+    }
+
+
+    public function orderDetails($order_id)
+    {
+        $order = Order::find($order_id);
+        $orderItems = OrderItem::where('order_id', $order_id)->orderBy('id')->paginate(12);
+        $transaction = Transaction::where('order_id', $order_id)->first();
+        return view('admin.order_details', compact('order', 'orderItems', 'transaction'));
+    }
+
+
+    public function updateOrderStatus(Request $request)
+    {
+        $order = Order::find($request->order_id);
+        $order->status = $request->order_status;
+        if($request->order_status == 'delivered')
+        {
+            $order->delivered_date = Carbon::now();
+        }
+        elseif($request->order_status == 'canceled')
+        {
+            $order->canceled_date = Carbon::now();
+        }
+
+        $order->save();
+
+        if($request->order_status == 'delivered')
+        {
+            $transaction = Transaction::where('order_id', $request->order_id)->first();
+            $transaction->status = 'approved';
+            $transaction->save();
+        }
+        // elseif($request->order_status == 'canceled')
+        // {
+        //     $transaction = Transaction::where('order_id', $request->order_id)->first();
+        //     $transaction->status = 'declined';
+        //     $transaction->save();
+        // }
+
+        return back()->with('status', 'Order Status changed successfulyl!');
     }
 
 
