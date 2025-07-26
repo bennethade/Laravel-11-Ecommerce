@@ -43,6 +43,10 @@ Route::get('/checkout', [CartController::class, 'checkout'])->name('cart.checkou
 Route::post('/place-an-order', [CartController::class, 'placeAnOrder'])->name('cart.place.an.order');
 Route::get('/order-confirmation', [CartController::class, 'orderConfirmation'])->name('cart.order.confirmation');
 
+Route::get('/payment/callback', [CartController::class, 'handleCallback'])->name('payment.callback');
+
+
+
 
 Route::get('/contact-us', [HomeController::class, 'contact'])->name('home.contact');
 Route::post('/contact/store', [HomeController::class, 'contactStore'])->name('home.contact.store');

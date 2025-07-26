@@ -7,11 +7,18 @@ use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Transaction;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Surfsidemedia\Shoppingcart\Facades\Cart;
+use Unicodeveloper\Paystack\Paystack;
+
+// use Unicodeveloper\Paystack\Facades\Paystack;
 
 class CartController extends Controller
 {
@@ -196,6 +203,7 @@ class CartController extends Controller
         $order->country     =   $address->country;
         $order->landmark    =   $address->landmark;
         $order->zip         =   $address->zip;
+        $order->status      =   'ordered';
 
         $order->save();
 
@@ -209,9 +217,13 @@ class CartController extends Controller
             $orderItem->save();
         }
 
-        if($request->mode == "card")
-        {
-            //
+        if($request->mode == "card") {
+            $paymentRedirect = $this->initializePaystackPayment($order);
+            if ($paymentRedirect instanceof RedirectResponse) {
+                return $paymentRedirect; // Only return if it's a redirect
+            }
+            // If we get here, initialization failed
+            return back()->with('error', 'Payment initialization failed');
         }
         elseif($request->mode == "paypal")
         {
@@ -227,14 +239,130 @@ class CartController extends Controller
             $transaction->save();
         }
 
-        Cart::instance('cart')->destroy();
-        Session::forget('checkout');
-        Session::forget('coupon');
-        Session::forget('discounts');
-        Session::put('order_id', $order->id);
+        // Only clear cart if not using card payment (card payment clears after callback)
+        if($request->mode != "card") {
+            Cart::instance('cart')->destroy();
+            Session::forget('checkout');
+            Session::forget('coupon');
+            Session::forget('discounts');
+            Session::put('order_id', $order->id);
+        }
 
-        // return view('order_confirmation', compact('order'));
-        return redirect()->route('cart.order.confirmation');
+        if($request->mode == "cod") {
+            return redirect()->route('cart.order.confirmation');
+        }
+    }
+
+
+    protected function initializePaystackPayment($order)
+    {
+        try {
+
+            // Cart::instance('cart')->erase($order->user_id);
+
+            $response = Http::withOptions([
+                'verify' => true, // Auto-finds CA bundle
+            ])->withHeaders([
+                'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
+                'Content-Type' => 'application/json',
+            ])->post(env('PAYSTACK_PAYMENT_URL'), [
+                'email' => Auth::user()->email,
+                'amount' => $order->total * 100,
+                'reference' => 'ORD-' . $order->id . '-' . time(),
+                'metadata' => [
+                    'order_id' => $order->id,
+                    'user_id' => $order->user_id,
+                    'cart_items' => Cart::instance('cart')->content()->toArray()
+                ],
+                'callback_url' => route('payment.callback')
+            ]);
+
+            if ($response->failed()) {
+                throw new \Exception('Payment initialization failed');
+            }
+
+            $responseData = $response->json();
+            if (!$responseData['status']) {
+                throw new \Exception('Paystack error: ' . ($responseData['message'] ?? 'Unknown error'));
+            }
+
+            // Save transaction before redirecting
+            $transaction = new Transaction();
+            $transaction->user_id = $order->user_id;
+            $transaction->order_id = $order->id;
+            $transaction->mode = 'card';
+            $transaction->status = 'pending';
+            $transaction->transaction_id = $responseData['data']['reference'];
+            $transaction->save();
+
+            return redirect($responseData['data']['authorization_url']);
+
+        } catch (\Exception $e) {
+            Log::error('Paystack Init Error: ' . $e->getMessage());
+            // Return the error message to be displayed
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+
+    public function handleCallback(Request $request)
+    {
+        $reference = $request->query('reference');
+        
+        if (!$reference) {
+            Log::error('Paystack callback missing reference');
+            return redirect()->route('cart.index')->with('error', 'Payment reference not found.');
+        }
+
+        try {
+            // Verify payment with Paystack
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
+                'Content-Type' => 'application/json',
+            ])->get(env('PAYSTACK_VERIFICATION_URL') . $reference);
+
+            $responseData = $response->json();
+            Log::info('Paystack verification response', $responseData);
+
+            if (!$response->successful() || !$responseData['status']) {
+                throw new \Exception('Payment verification failed: ' . ($responseData['message'] ?? 'Unknown error'));
+            }
+
+            if ($responseData['data']['status'] === 'success') {
+                // Find transaction
+                $transaction = Transaction::where('transaction_id', $reference)->first();
+                
+                if (!$transaction) {
+                    throw new \Exception("Transaction not found for reference: $reference");
+                }
+
+                // Update transaction
+                $transaction->status = 'approved';
+                $transaction->save();
+
+                // Get order and user
+                $order = Order::find($transaction->order_id);
+                if (!$order) {
+                    throw new \Exception("Order not found for transaction: $transaction->id");
+                }
+
+                // Clear cart for this user (don't rely on session in callback)
+                // Cart::instance('cart')->erase($transaction->user_id);
+                // Cart::instance('cart')->erase($order->user_id);
+                Cart::instance('cart')->destroy();
+
+                // Store order ID in session for confirmation page
+                session(['order_id' => $order->id]);
+
+                return redirect()->route('cart.order.confirmation');
+            }
+
+            throw new \Exception('Payment not successful: ' . ($responseData['data']['gateway_response'] ?? 'Unknown reason'));
+
+        } catch (\Exception $e) {
+            Log::error('Paystack Callback Error: ' . $e->getMessage());
+            return redirect()->route('cart.index')->with('error', 'Payment processing failed: ' . $e->getMessage());
+        }
     }
 
 
@@ -270,33 +398,6 @@ class CartController extends Controller
         }
     }
 
-
-    // public function setAmountForCheckout()
-    // {
-    //     if(!Cart::instance('cart')->content()->count() > 0)
-    //     {
-    //         Session::forget('checkout');
-    //         return;
-    //     }
-
-    //     if(Session::has('coupon'))
-    //     {
-    //         Session::put('checkout', [
-    //             'discount' => Session::get('discounts')['discount'],
-    //             'subtotal' => Session::get('discounts')['subtotal'],
-    //             'tax' => Session::get('discounts')['tax'],
-    //             'total' => Session::get('discounts')['total'],
-    //         ]);
-    //     }
-    //     else{
-    //             Session::put('checkout', [
-    //             'discount' => 0,
-    //             'subtotal' => Cart::instance('cart')->subtotal(),
-    //             'tax' => Cart::instance('cart')->tax(),
-    //             'total' => Cart::instance('cart')->total(),
-    //         ]);
-    //     }
-    // }
 
 
     public function orderConfirmation()

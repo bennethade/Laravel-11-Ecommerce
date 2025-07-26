@@ -29,6 +29,11 @@
                 </span>
                 </a>
             </div>
+            @if(session('error'))
+                <div class="alert alert-danger">
+                    {{ session('error') }}
+                </div>
+            @endif
             <form name="checkout-form" action="{{ route('cart.place.an.order') }}" method="POST">
                 @csrf
                 <div class="checkout-form">
