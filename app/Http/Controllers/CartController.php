@@ -292,7 +292,7 @@ class CartController extends Controller
             $transaction->order_id = $order->id;
             $transaction->mode = 'card';
             $transaction->status = 'pending';
-            $transaction->transaction_id = $responseData['data']['reference'];
+            $transaction->transaction_reference = $responseData['data']['reference'];
             $transaction->save();
 
             return redirect($responseData['data']['authorization_url']);
@@ -330,7 +330,7 @@ class CartController extends Controller
 
             if ($responseData['data']['status'] === 'success') {
                 // Find transaction
-                $transaction = Transaction::where('transaction_id', $reference)->first();
+                $transaction = Transaction::where('transaction_reference', $reference)->first();
                 
                 if (!$transaction) {
                     throw new \Exception("Transaction not found for reference: $reference");
